@@ -1,14 +1,9 @@
 import logging
-import pdb
 from typing import List
 import asyncio
 import sys
 
 import aiohttp
-
-
-loop = asyncio.get_event_loop()
-loop.call_later()
 
 
 logging.basicConfig(stream=sys.stdout, level=logging.INFO)
@@ -29,11 +24,10 @@ async def get(url: str = None, counter: int = 0, session: aiohttp.ClientSession 
     """
     if session is None:
         raise ValueError('`session` is a required argument. You must pass an HTTP Session')
-    async with aiohttp.ClientSession() as session:
-        logger.info(f'Awaiting {url} in call {counter}.')
-        result = await session.get(url)
-        logger.info(f'{url} was returned in the {counter} call.')
-        return await result.text()
+    logger.info(f'Awaiting {url} in call {counter}.')
+    result = await session.get(url)
+    logger.info(f'{url} was returned in the {counter} call.')
+    return await result.text()
 
 
 async def get_many_using_gather(urls: List[str], session: aiohttp.ClientSession = None) -> List[str]:
@@ -58,7 +52,8 @@ def get_many_using_tasks(urls: List[str], session : aiohttp.ClientSession = None
         raise ValueError('`session` is a required argument. You must pass an HTTP Session')
     tasks = []
     for counter, url in enumerate(urls):
-        tasks.append(asyncio.create_task(get(url, counter, session)))
+        mycoroutine = get(url, counter, session)
+        tasks.append(asyncio.create_task(mycoroutine))
     return tasks
 
 
@@ -76,15 +71,16 @@ async def main():
         logger.info('-------------------------------------------')
         logger.info('Awaiting many pages using asyncio.Tasks')
         logger.info('-------------------------------------------')
-        pdb.set_trace()
         logger.info('-------------------------------------------')
-        done, pending = await asyncio.wait(get_many_using_tasks(urls, session=session))
-        logger.info('Done waiting with Tasks. That was fast!')
-        logger.info('-------------------------------------------')
-        logger.info('')
-        pdb.set_trace()
+        tasks = get_many_using_tasks([
+            'https://staging.titfortat.io',
+            'https://staging.titfortat.io',
+            'https://staging.titfortat.io',
+            'https://staging.titfortat.io',
+        ], session=session)
+        done, pending = await asyncio.wait(tasks)
 
-
+        """
         logger.info('')
         logger.info('-------------------------------------------')
         logger.info('Awaiting many pages using asyncio.gather...')
@@ -107,6 +103,7 @@ async def main():
         logger.info('')
         pdb.set_trace()
 
+
         logger.info('')
         logger.info('-------------------------------------------')
         logger.info('Awaiting many pages using gather on top of await...')
@@ -117,9 +114,8 @@ async def main():
         logger.info('-------------------------------------------')
         logger.info('')
         pdb.set_trace()
-        logger.info('Done.')
+        """
 
 
 if __name__ == '__main__':
     asyncio.run(main())
-
