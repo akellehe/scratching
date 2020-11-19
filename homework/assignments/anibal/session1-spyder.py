@@ -10,60 +10,6 @@ import datetime
 logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-URL = 'https://staging.titfortat.io'
-
-
-async def get(url: str = None, counter: int = 0, session: aiohttp.ClientSession = None) -> str:
-    """
-    Get a webpage's content, given it's URL. Uses only a simple GET HTTP Request
-
-    :param str url: A fully qualified URL to fetch.
-    :param int counter: Which call is this? Order matters!
-    :param aiohttp.ClientSession session: A re-usable session for making calls.
-
-    :return: str The result.
-    """
-    if session is None:
-        raise ValueError('`session` is a required argument. You must pass an HTTP Session')
-    logger.info(f'Awaiting {url} in call {counter}.')
-    result = await session.get(url)
-    logger.info(f'{url} was returned in the {counter} call.')
-    return await result.text()
-
-
-
-async def get_many_using_gather(urls: List[str], session: aiohttp.ClientSession = None) -> List[str]:
-    """
-    Get several pages CONCURRENTLY, given a list of URLs.
-
-    :param list<str> urls: A list of URLs to fetch.
-    :return: list<str> The content of all the pages downloaded.
-    """
-    if session is None:
-        raise ValueError('`session` is a required argument. You must pass an HTTP Session')
-    return await asyncio.gather(
-        *[
-            get(url, counter, session)
-            for counter, url in enumerate(urls)
-        ]
-    )
-
-
-def get_many_using_tasks(urls: List[str], session : aiohttp.ClientSession = None) -> List[asyncio.Task]:
-    if session is None:
-        raise ValueError('`session` is a required argument. You must pass an HTTP Session')
-    tasks = []
-    for counter, url in enumerate(urls):
-        mycoroutine = get(url, counter, session)
-        tasks.append(asyncio.create_task(mycoroutine))
-    return tasks
-
-
-async def get_many_serially(urls: List[str], session: aiohttp.ClientSession = None) -> List[str]:
-    if session is None:
-        raise ValueError('`session` is a required argument. You must pass an HTTP Session')
-    for counter, url in enumerate(urls):
-        await get(url, counter, session)
 
 
 def print_elapsed_time(start_time: datetime.datetime, message: str = 'Duration: '):
@@ -140,7 +86,7 @@ async def main():
         urls.append(f'{URL}/?count={i}')
 
     # Throttle configuration
-    # source: https://docs.aiohttp.org/en/stable/client_advanced.html#limiting-connection-pool-size
+    # info: https://docs.aiohttp.org/en/stable/client_advanced.html#limiting-connection-pool-size
     max_total_session_parallel_connections = 8
     max_per_host_session_parallel_connections = 2
     limited_connector = aiohttp.TCPConnector(limit = max_total_session_parallel_connections, limit_per_host = max_per_host_session_parallel_connections)
@@ -157,42 +103,6 @@ async def main():
             print_elapsed_time(start_time, f'\n===> Done/Pending: {len(pending)}/{len(done)} Running:')
             if (len(pending) == 0):
                 break
-
-        """
-        logger.info('')
-        logger.info('-------------------------------------------')
-        logger.info('Awaiting many pages using asyncio.gather...')
-        logger.info('-------------------------------------------')
-        pdb.set_trace()
-        logger.info('-------------------------------------------')
-        results = await get_many_using_gather(urls, session=session)
-        logger.info('-------------------------------------------')
-        logger.info('')
-        pdb.set_trace()
-
-        logger.info('')
-        logger.info('-------------------------------------------')
-        logger.info('Awaiting many pages using plain old await...')
-        logger.info('-------------------------------------------')
-        pdb.set_trace()
-        logger.info('-------------------------------------------')
-        results = await get_many_serially(urls, session=session)
-        logger.info('-------------------------------------------')
-        logger.info('')
-        pdb.set_trace()
-
-
-        logger.info('')
-        logger.info('-------------------------------------------')
-        logger.info('Awaiting many pages using gather on top of await...')
-        results = await asyncio.gather(
-            get_many_serially(urls, session=session),
-            get_many_serially(urls, session=session),
-            get_many_serially(urls, session=session))
-        logger.info('-------------------------------------------')
-        logger.info('')
-        pdb.set_trace()
-        """
 
         print_elapsed_time(start_time, "Total duration:")
 
