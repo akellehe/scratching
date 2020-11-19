@@ -101,7 +101,7 @@ async def main():
         tasks = get_many_using_tasks_with_callback(urls, session=session, response_callback=example_callback)
         while True:
             done, pending = await asyncio.wait(tasks, timeout=0.25)
-            print_elapsed_time(start_time, f'\n===> Done/Pending: {len(pending)}/{len(done)} Running:')
+            print_elapsed_time(start_time, f'\n===> Done/Pending: {len(done)}/{len(pending)} Running:')
             if (len(pending) == 0):
                 break
 
