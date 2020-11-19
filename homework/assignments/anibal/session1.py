@@ -4,6 +4,7 @@ import asyncio
 import sys
 
 import aiohttp
+import datetime
 
 
 logging.basicConfig(stream=sys.stdout, level=logging.INFO)
@@ -64,7 +65,22 @@ async def get_many_serially(urls: List[str], session: aiohttp.ClientSession = No
         await get(url, counter, session)
 
 
+def print_elapsed_time(start_time: datetime.datetime, message: str = 'Duration: '):
+    """
+    Prints to console a message and the duration in (minutes):(seconds) between start_time and current time.
+    It removes microseconds from the time stamp.
+
+    :param datetime.datetime start_time: should have start time obtained using datetime.datetime.utcnow()
+    :param str message: Custom message to be displayed before the time duration. 
+    """
+    end_time = datetime.datetime.utcnow().replace(microsecond=0)
+    elapsed_time = end_time - start_time.replace(microsecond=0)
+    print(f'{message} {str(elapsed_time)}')
+
+
 async def main():
+    start_time = datetime.datetime.utcnow().replace(microsecond=0)
+
     urls = [URL, URL, URL, URL]
     async with aiohttp.ClientSession() as session:
         logger.info('')
@@ -79,6 +95,7 @@ async def main():
             'https://staging.titfortat.io',
         ], session=session)
         done, pending = await asyncio.wait(tasks)
+
 
         """
         logger.info('')
@@ -116,6 +133,7 @@ async def main():
         pdb.set_trace()
         """
 
+        print_elapsed_time(start_time, "Total duration:")
 
 if __name__ == '__main__':
     asyncio.run(main())
