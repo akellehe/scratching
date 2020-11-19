@@ -134,21 +134,25 @@ def example_callback(url: str, text: str):
 async def main():
     start_time = datetime.datetime.utcnow().replace(microsecond=0)
 
-    urls = [URL, URL, URL, URL]
-    async with aiohttp.ClientSession() as session:
+    # Build example urls
+    urls = []
+    for i in range(10):
+        urls.append(f'{URL}/?count={i}')
+
+    # Throttle configuration
+    # source: https://docs.aiohttp.org/en/stable/client_advanced.html#limiting-connection-pool-size
+    max_total_session_parallel_connections = 8
+    max_per_host_session_parallel_connections = 5
+    limited_connector = aiohttp.TCPConnector(limit = max_total_session_parallel_connections, limit_per_host = max_per_host_session_parallel_connections)
+
+    async with aiohttp.ClientSession(connector=limited_connector) as session:
         logger.info('')
         logger.info('-------------------------------------------')
         logger.info('Awaiting many pages using asyncio.Tasks')
         logger.info('-------------------------------------------')
         logger.info('-------------------------------------------')
-        tasks = get_many_using_tasks_with_callback([
-            'https://staging.titfortat.io',
-            'https://staging.titfortat.io',
-            'https://staging.titfortat.io',
-            'https://staging.titfortat.io',
-        ], session=session, response_callback=example_callback)
+        tasks = get_many_using_tasks_with_callback(urls, session=session, response_callback=example_callback)
         done, pending = await asyncio.wait(tasks)
-
 
         """
         logger.info('')
