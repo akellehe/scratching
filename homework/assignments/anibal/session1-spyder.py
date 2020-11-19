@@ -49,10 +49,9 @@ async def get_with_callback(url: str = None, counter: int = 0, session: aiohttp.
 
         return await result.text()
 
-    except:
-        logger.info(f'{url} ERROR!')
+    except Exception as e:
+        logger.error(f'{url}\n=> {e}')
         return ''
-
 
 
 def get_many_using_tasks_with_callback(urls: List[str], session : aiohttp.ClientSession = None, response_callback = None) -> List[asyncio.Task]:
@@ -79,9 +78,11 @@ def example_callback(url: str, text: str):
 
 async def main():
     start_time = datetime.datetime.utcnow().replace(microsecond=0)
+    urls = []
 
     # Build example urls
-    urls = []
+    #URL = 'https://staging.titfortat.io'
+    URL = 'http://localhost:8000'
     for i in range(10):
         urls.append(f'{URL}/?count={i}')
 
