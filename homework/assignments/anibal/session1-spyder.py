@@ -142,7 +142,7 @@ async def main():
     # Throttle configuration
     # source: https://docs.aiohttp.org/en/stable/client_advanced.html#limiting-connection-pool-size
     max_total_session_parallel_connections = 8
-    max_per_host_session_parallel_connections = 5
+    max_per_host_session_parallel_connections = 2
     limited_connector = aiohttp.TCPConnector(limit = max_total_session_parallel_connections, limit_per_host = max_per_host_session_parallel_connections)
 
     async with aiohttp.ClientSession(connector=limited_connector) as session:
@@ -152,7 +152,11 @@ async def main():
         logger.info('-------------------------------------------')
         logger.info('-------------------------------------------')
         tasks = get_many_using_tasks_with_callback(urls, session=session, response_callback=example_callback)
-        done, pending = await asyncio.wait(tasks)
+        while True:
+            done, pending = await asyncio.wait(tasks, timeout=0.25)
+            print_elapsed_time(start_time, f'\n===> Done/Pending: {len(pending)}/{len(done)} Running:')
+            if (len(pending) == 0):
+                break
 
         """
         logger.info('')
