@@ -7,6 +7,7 @@ import aiohttp
 import datetime
 
 
+
 logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 logger = logging.getLogger(__name__)
 
@@ -81,10 +82,14 @@ async def main():
     urls = []
 
     # Build example urls
-    #URL = 'https://staging.titfortat.io'
-    URL = 'http://localhost:8000'
+    URL = 'https://staging.titfortat.io'
     for i in range(10):
         urls.append(f'{URL}/?count={i}')
+
+    # Additional urls to demonstrate error if service not available in localhost.
+    urls.append('http://localhost:8000')
+    urls.append('http://localhost:8080')
+
 
     # Throttle configuration
     # info: https://docs.aiohttp.org/en/stable/client_advanced.html#limiting-connection-pool-size
